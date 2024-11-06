@@ -5,6 +5,7 @@ Purpose: lvrbot - Low Volume Reply Bot (for Reddit)
 Website: https://lvrbot.com
 """
 import configparser
+import json
 import pathlib
 import praw
 
@@ -20,6 +21,8 @@ client_secret = config["config"]["client_secret"]
 reddit_username = config["config"]["reddit_username"]
 reddit_password = config["config"]["reddit_password"]
 subreddit = config["config"]["subreddit"]
+reply_prefix = config["config"]["reply_prefix"]
+reply_suffix = config["config"]["reply_suffix"]
 
 reddit = praw.Reddit(
     client_id=client_id,
@@ -50,7 +53,9 @@ def main():
     write_to_past_posts(id_to_comment_on)
 
     submission = reddit.submission(id_to_comment_on)
-    submission.reply(body=get_reply_text())
+    submission.reply(
+        body=reply_prefix + " " + get_reply_text() + "  \n  \n" + reply_suffix
+    )
 
 
 # =============================================================================
@@ -66,10 +71,34 @@ def get_file_contents(filename):
 
 def get_reply_text():
 
-    with open(str(pathlib.Path(__file__).absolute())[:-2] + "reply") as file:
-        file_contents = file.read()
+    with open(str(pathlib.Path(__file__).absolute())[:-2] + "replies") as file:
+        file_contents = json.load(file)
 
-    return file_contents
+    # Retrieve the top reply
+    reply_text = file_contents[0]
+
+    # Move the top reply to the bottom of the list
+    reorder_replies()
+
+    return reply_text["reply"]
+
+
+def reorder_replies():
+
+    with open(str(pathlib.Path(__file__).absolute())[:-2] + "replies") as file:
+        file_contents = json.load(file)
+
+    # Remove the top reply and set it as the reply to post
+    top_entry = file_contents.pop(0)
+
+    # Move the top reply to the bottom of the list
+    file_contents.append(top_entry)
+
+    # Re-write the reordered list to the file
+    with open(str(pathlib.Path(__file__).absolute())[:-2] + "replies", "w") as file:
+        json.dump(file_contents, file, indent=4)
+
+    return
 
 
 def get_live_posts():

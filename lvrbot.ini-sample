@@ -4,3 +4,5 @@ client_secret=
 reddit_username=
 reddit_password=
 subreddit=
+reply_prefix=
+reply_suffix=
