@@ -24,7 +24,13 @@ subreddit = config["config"]["subreddit"]
 reply_prefix = config["config"]["reply_prefix"]
 reply_suffix = config["config"]["reply_suffix"]
 
-reddit = praw.Reddit(
+reddit_read = praw.Reddit(
+    client_id=client_id,
+    client_secret=client_secret,
+    user_agent=user_agent,
+)
+
+reddit_write = praw.Reddit(
     client_id=client_id,
     client_secret=client_secret,
     username=reddit_username,
@@ -52,7 +58,7 @@ def main():
 
     write_to_past_posts(id_to_comment_on)
 
-    submission = reddit.submission(id_to_comment_on)
+    submission = reddit_write.submission(id_to_comment_on)
     submission.reply(
         body=reply_prefix + " " + get_reply_text() + "  \n  \n" + reply_suffix
     )
@@ -105,7 +111,7 @@ def get_live_posts():
 
     live_ids = []
 
-    for live_posts in reddit.subreddit(subreddit).new(limit=post_limit):
+    for live_posts in reddit_read.subreddit(subreddit).new(limit=post_limit):
         live_ids.append(live_posts.id)
 
     return live_ids
